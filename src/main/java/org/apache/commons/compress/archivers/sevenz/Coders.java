@@ -173,6 +173,7 @@ class Coders {
         InputStream decode(final String archiveName, final InputStream in, long uncompressedLength,
                 final Coder coder, final byte[] password)
                 throws IOException {
+          // TODO: replace decoding here.
             return new BZip2CompressorInputStream(in);
         }
         @Override

@@ -69,7 +69,7 @@ public class SevenZFile implements Closeable {
 
     private final String fileName;
     private RandomAccessFile file;
-    private final Archive archive;
+    final Archive archive;
     private int currentEntryIndex = -1;
     private int currentFolderIndex = -1;
     private InputStream currentFolderInputStream = null;
@@ -818,6 +818,7 @@ public class SevenZFile implements Closeable {
             drainPreviousEntry();
             file.setContentMethods(archive.files[currentEntryIndex - 1].getContentMethods());
         } else {
+            System.out.println("Opening Folder: " + folderIndex);
             currentFolderIndex = folderIndex;
             if (currentFolderInputStream != null) {
                 currentFolderInputStream.close();
@@ -861,6 +862,7 @@ public class SevenZFile implements Closeable {
                 throw new IOException("Multi input/output stream coders are not yet supported");
             }
             SevenZMethod method = SevenZMethod.byId(coder.decompressionMethodId);
+            System.out.println("  -> coder: " + method);
             inputStreamStack = Coders.addDecoder(fileName, inputStreamStack,
                     folder.getUnpackSizeForCoder(coder), coder, password);
             methods.addFirst(new SevenZMethodConfiguration(method,
