@@ -25,12 +25,11 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.deflate.DeflateCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.pack200.Pack200CompressorInputStream;
@@ -90,23 +89,23 @@ public final class DetectCompressorTestCase {
     
     @Test
     public void testDetection() throws Exception {
-        InputStream bzip2 = getStreamFor("bla.txt.bz2"); 
+        CompressorInputStream bzip2 = getStreamFor("bla.txt.bz2"); 
         assertNotNull(bzip2);
-        assertTrue(bzip2 instanceof CBZip2InputStream);
+        assertTrue(bzip2 instanceof BZip2CompressorInputStream);
 
-        InputStream gzip = getStreamFor("bla.tgz");
+        CompressorInputStream gzip = getStreamFor("bla.tgz");
         assertNotNull(gzip);
         assertTrue(gzip instanceof GzipCompressorInputStream);
         
-        InputStream pack200 = getStreamFor("bla.pack");
+        CompressorInputStream pack200 = getStreamFor("bla.pack");
         assertNotNull(pack200);
         assertTrue(pack200 instanceof Pack200CompressorInputStream);
 
-        InputStream xz = getStreamFor("bla.tar.xz");
+        CompressorInputStream xz = getStreamFor("bla.tar.xz");
         assertNotNull(xz);
         assertTrue(xz instanceof XZCompressorInputStream);
 
-        InputStream zlib = getStreamFor("bla.tar.deflatez");
+        CompressorInputStream zlib = getStreamFor("bla.tar.deflatez");
         assertNotNull(zlib);
         assertTrue(zlib instanceof DeflateCompressorInputStream);
 
@@ -151,7 +150,7 @@ public final class DetectCompressorTestCase {
             final CompressorStreamFactory fac = test.factory;
             assertNotNull("Test entry "+i, fac);
             assertEquals("Test entry "+i, test.concat, fac.getDecompressConcatenated());
-            InputStream in = getStreamFor(test.fileName, fac);
+            CompressorInputStream in = getStreamFor(test.fileName, fac);
             assertNotNull("Test entry "+i,in);
             for (char entry : test.entryNames) {
                 assertEquals("Test entry" + i, entry, in.read());                
@@ -161,14 +160,14 @@ public final class DetectCompressorTestCase {
         }
     }
 
-    private InputStream getStreamFor(String resource)
+    private CompressorInputStream getStreamFor(String resource)
             throws CompressorException, IOException {
         return factory.createCompressorInputStream(
                    new BufferedInputStream(new FileInputStream(
                        getFile(resource))));
     }
 
-    private InputStream getStreamFor(String resource, CompressorStreamFactory factory)
+    private CompressorInputStream getStreamFor(String resource, CompressorStreamFactory factory)
             throws CompressorException, IOException {
         return factory.createCompressorInputStream(
                    new BufferedInputStream(new FileInputStream(

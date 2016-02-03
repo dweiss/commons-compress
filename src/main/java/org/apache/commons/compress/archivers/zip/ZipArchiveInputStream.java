@@ -18,8 +18,6 @@
  */
 package org.apache.commons.compress.archivers.zip;
 
-import static org.apache.commons.compress.archivers.zip.ZipConstants.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -35,8 +33,13 @@ import java.util.zip.ZipException;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
+
+import static org.apache.commons.compress.archivers.zip.ZipConstants.DWORD;
+import static org.apache.commons.compress.archivers.zip.ZipConstants.SHORT;
+import static org.apache.commons.compress.archivers.zip.ZipConstants.WORD;
+import static org.apache.commons.compress.archivers.zip.ZipConstants.ZIP64_MAGIC;
 
 /**
  * Implements an input stream that can read Zip archives.
@@ -311,7 +314,7 @@ public class ZipArchiveInputStream extends ArchiveInputStream {
                         current.entry.getGeneralPurposeBit().getNumberOfShannonFanoTrees(),
                         new BoundedInputStream(in, current.entry.getCompressedSize()));
             } else if (current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
-                current.in = new CBZip2InputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
+                current.in = new BZip2CompressorInputStream(new BoundedInputStream(in, current.entry.getCompressedSize()));
             }
         }
         

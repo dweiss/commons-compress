@@ -25,7 +25,7 @@ import java.io.FileInputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class ChainingTestCase extends AbstractTestCase {
     @Test
     public void testTarBzip2() throws Exception {
         File file = getFile("bla.tar.bz2");
-        final TarArchiveInputStream is = new TarArchiveInputStream(new CBZip2InputStream(new FileInputStream(file)));
+        final TarArchiveInputStream is = new TarArchiveInputStream(new BZip2CompressorInputStream(new FileInputStream(file)));
         final TarArchiveEntry entry = (TarArchiveEntry)is.getNextEntry();
         assertNotNull(entry);
         assertEquals("test1.xml", entry.getName());

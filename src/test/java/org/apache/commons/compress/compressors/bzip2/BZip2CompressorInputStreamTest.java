@@ -18,14 +18,12 @@
  */
 package org.apache.commons.compress.compressors.bzip2;
 
-import static org.apache.commons.compress.AbstractTestCase.*;
+import static org.apache.commons.compress.AbstractTestCase.getFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +33,7 @@ public class BZip2CompressorInputStreamTest {
     public void shouldThrowAnIOExceptionWhenAppliedToAZipFile() throws Exception {
         FileInputStream in = new FileInputStream(getFile("bla.zip"));
         try {
-            new CBZip2InputStream(in);
+            new BZip2CompressorInputStream(in);
         } finally {
             in.close();
         }
@@ -63,7 +61,7 @@ public class BZip2CompressorInputStreamTest {
 
         // Try to read it back in
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        CBZip2InputStream bzipIn = new CBZip2InputStream(bais);
+        BZip2CompressorInputStream bzipIn = new BZip2CompressorInputStream(bais);
         byte[] buffer = new byte[1024];
         Assert.assertEquals(1024, bzipIn.read(buffer, 0, 1024));
         Assert.assertEquals(0, bzipIn.read(buffer, 1024, 0));

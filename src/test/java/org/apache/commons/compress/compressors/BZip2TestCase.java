@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.compress.AbstractTestCase;
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ public final class BZip2TestCase extends AbstractTestCase {
         {
             final File toDecompress = output;
             final InputStream is = new FileInputStream(toDecompress);
-            final InputStream in =
+            final CompressorInputStream in =
                 new CompressorStreamFactory().createCompressorInputStream("bzip2", is);
             FileOutputStream os = new FileOutputStream(decompressed);
             IOUtils.copy(in, os);
@@ -67,7 +67,7 @@ public final class BZip2TestCase extends AbstractTestCase {
         final File input = getFile("bla.txt.bz2");
         final File output = new File(dir, "bla.txt");
         final InputStream is = new FileInputStream(input);
-        final InputStream in = new CompressorStreamFactory().createCompressorInputStream("bzip2", is);
+        final CompressorInputStream in = new CompressorStreamFactory().createCompressorInputStream("bzip2", is);
         FileOutputStream os = new FileOutputStream(output);
         IOUtils.copy(in, os);
         is.close();
@@ -79,7 +79,7 @@ public final class BZip2TestCase extends AbstractTestCase {
         final File input = getFile("multiple.bz2");
         final InputStream is = new FileInputStream(input);
         try {
-            final InputStream in = new CompressorStreamFactory()
+            final CompressorInputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("bzip2", is);
             try {
                 assertEquals('a', in.read());
@@ -97,8 +97,8 @@ public final class BZip2TestCase extends AbstractTestCase {
         final File input = getFile("multiple.bz2");
         final InputStream is = new FileInputStream(input);
         try {
-            final CBZip2InputStream in =
-                new CBZip2InputStream(is, true);
+            final CompressorInputStream in =
+                new BZip2CompressorInputStream(is, true);
             try {
                 assertEquals('a', in.read());
                 assertEquals('b', in.read());
@@ -117,8 +117,8 @@ public final class BZip2TestCase extends AbstractTestCase {
         final File input = getFile("COMPRESS-131.bz2");
         final InputStream is = new FileInputStream(input);
         try {
-            final CBZip2InputStream in =
-                new CBZip2InputStream(is, true);
+            final CompressorInputStream in =
+                new BZip2CompressorInputStream(is, true);
             try {
                 int l = 0;
                 while(in.read() != -1) {

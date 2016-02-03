@@ -60,7 +60,7 @@ public final class XZTestCase extends AbstractTestCase {
         final File output = new File(dir, "bla.tar");
         final InputStream is = new FileInputStream(input);
         try {
-            final InputStream in = new CompressorStreamFactory()
+            final CompressorInputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("xz", is);
             FileOutputStream out = null;
             try {
@@ -82,7 +82,7 @@ public final class XZTestCase extends AbstractTestCase {
         final File input = getFile("multiple.xz");
         final InputStream is = new FileInputStream(input);
         try {
-            final InputStream in = new CompressorStreamFactory()
+            final CompressorInputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("xz", is);
             try {
                 assertEquals('a', in.read());

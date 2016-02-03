@@ -36,7 +36,7 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipException;
 
-import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import static org.apache.commons.compress.archivers.zip.ZipConstants.DWORD;
@@ -425,7 +425,7 @@ public class ZipFile implements Closeable {
                     }
                 };
             case BZIP2:
-                return new CBZip2InputStream(bis);
+                return new BZip2CompressorInputStream(bis);
             default:
                 throw new ZipException("Found unsupported compression method "
                                        + ze.getMethod());
