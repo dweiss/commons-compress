@@ -91,7 +91,7 @@ public final class DeflateTestCase extends AbstractTestCase {
         final File output = new File(dir, "bla.tar");
         final InputStream is = new FileInputStream(input);
         try {
-            final CompressorInputStream in = new CompressorStreamFactory()
+            final InputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("deflate", is); // zlib header is expected by default
             FileOutputStream out = null;
             try {

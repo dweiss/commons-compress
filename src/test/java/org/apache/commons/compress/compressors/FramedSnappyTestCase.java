@@ -29,6 +29,7 @@ import java.io.InputStream;
 
 import org.apache.commons.compress.AbstractTestCase;
 import org.apache.commons.compress.compressors.snappy.FramedSnappyCompressorInputStream;
+import org.apache.commons.compress.utils.CountingInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public final class FramedSnappyTestCase
 
     @Test
     public void testDefaultExtraction() throws Exception {
-        testUnarchive(new StreamWrapper<CompressorInputStream>() {
+        testUnarchive(new StreamWrapper<InputStream>() {
             public CompressorInputStream wrap(InputStream is) throws IOException {
                 return new FramedSnappyCompressorInputStream(is);
             }
@@ -46,8 +47,8 @@ public final class FramedSnappyTestCase
 
     @Test
     public void testDefaultExtractionViaFactory() throws Exception {
-        testUnarchive(new StreamWrapper<CompressorInputStream>() {
-            public CompressorInputStream wrap(InputStream is) throws Exception {
+        testUnarchive(new StreamWrapper<InputStream>() {
+            public InputStream wrap(InputStream is) throws Exception {
                 return new CompressorStreamFactory()
                     .createCompressorInputStream(CompressorStreamFactory.SNAPPY_FRAMED,
                                                  is);
@@ -57,21 +58,22 @@ public final class FramedSnappyTestCase
 
     @Test
     public void testDefaultExtractionViaFactoryAutodetection() throws Exception {
-        testUnarchive(new StreamWrapper<CompressorInputStream>() {
-            public CompressorInputStream wrap(InputStream is) throws Exception {
+        testUnarchive(new StreamWrapper<InputStream>() {
+            public InputStream wrap(InputStream is) throws Exception {
                 return new CompressorStreamFactory().createCompressorInputStream(is);
             }
         });
     }
 
-    private void testUnarchive(StreamWrapper<CompressorInputStream> wrapper) throws Exception {
+    private void testUnarchive(StreamWrapper<InputStream> wrapper) throws Exception {
         final File input = getFile("bla.tar.sz");
         final File output = new File(dir, "bla.tar");
         final FileInputStream is = new FileInputStream(input);
         try {
             // the intermediate BufferedInputStream is there for mark
             // support in the autodetection test
-            final CompressorInputStream in = wrapper.wrap(new BufferedInputStream(is));
+            final CountingInputStream in = 
+                new CountingInputStream(wrapper.wrap(new BufferedInputStream(is)));
             FileOutputStream out = null;
             try {
                 out = new FileOutputStream(output);

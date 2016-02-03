@@ -27,57 +27,14 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
-import static org.apache.commons.compress.compressors.cbzip2.SplittableCompressionCodec.READ_MODE;
-
-
-/**
- * An input stream that decompresses from the BZip2 format (without the file
- * header chars) to be read as any other stream.
- *
- * <p>
- * The decompression requires large amounts of memory. Thus you should call the
- * {@link #close() close()} method as soon as possible, to force
- * <tt>CBZip2InputStream</tt> to release the allocated memory. See
- * {@link CBZip2OutputStream CBZip2OutputStream} for information about memory
- * usage.
- * </p>
- *
- * <p>
- * <tt>CBZip2InputStream</tt> reads bytes from the compressed source stream via
- * the single byte {@link java.io.InputStream#read() read()} method exclusively.
- * Thus you should consider to use a buffered source stream.
- * </p>
- *
- * <p>
- * This Ant code was enhanced so that it can de-compress blocks of bzip2 data.
- * Current position in the stream is an important statistic for Hadoop. For
- * example in LineRecordReader, we solely depend on the current position in the
- * stream to know about the progess. The notion of position becomes complicated
- * for compressed files. The Hadoop splitting is done in terms of compressed
- * file. But a compressed file deflates to a large amount of data. So we have
- * handled this problem in the following way.
- *
- * On object creation time, we find the next block start delimiter. Once such a
- * marker is found, the stream stops there (we discard any read compressed data
- * in this process) and the position is updated (i.e. the caller of this class
- * will find out the stream location). At this point we are ready for actual
- * reading (i.e. decompression) of data.
- *
- * The subsequent read calls give out data. The position is updated when the
- * caller of this class has read off the current block + 1 bytes. In between the
- * block reading, position is not updated. (We can only update the postion on
- * block boundaries).
- * </p>
- *
- * <p>
- * Instances of this class are not threadsafe.
- * </p>
+/*
+ * Copied (with minor tweaks) from Apache Hadoop.  
  */
 public class CBZip2InputStream extends InputStream implements BZip2Constants {
   public static final long BLOCK_DELIMITER = 0X314159265359L;// start of block
   public static final long EOS_DELIMITER = 0X177245385090L;// end of bzip2 stream
   private static final int DELIMITER_BIT_LENGTH = 48;
-  READ_MODE readMode = READ_MODE.CONTINUOUS;
+
   // The variable records the current advertised position of the stream.
   private long reportedBytesReadFromCompressedStream = 0L;
   // The following variable keep record of compressed bytes read.
@@ -127,7 +84,6 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
   private int computedBlockCRC, computedCombinedCRC;
 
   private boolean skipResult = false;// used by skipToNextMarker
-  private boolean skipDecompression = false;
 
   // Variables used by setup* methods exclusively
 
@@ -264,68 +220,34 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
   /**
   * Constructs a new CBZip2InputStream which decompresses bytes read from the
   * specified stream.
-  *
-  * <p>
-  * Although BZip2 headers are marked with the magic <tt>"Bz"</tt> this
-  * constructor expects the next byte in the stream to be the first one after
-  * the magic. Thus callers have to skip the first two bytes. Otherwise this
-  * constructor will throw an exception.
-  * </p>
-  *
-  * @throws IOException
-  *             if the stream content is malformed or an I/O error occurs.
-  * @throws NullPointerException
-  *             if <tt>in == null</tt>
   */
-  public CBZip2InputStream(final InputStream in, READ_MODE readMode)
-      throws IOException {
-    this(in, readMode, false);
-  }
-
-  private CBZip2InputStream(final InputStream in, READ_MODE readMode, boolean skipDecompression)
-      throws IOException {
-
+  public CBZip2InputStream(final InputStream in) throws IOException {
     super();
+
+    int b1 = readAByte(in);
+    int b2 = readAByte(in);
+    if (b1 != 'B' || b2 != 'Z') {
+      throw new IOException("Not a bz2 stream (header missing).");
+    }
+
+    if (in instanceof BufferedInputStream) {
+      this.in = (BufferedInputStream) in;
+    } else {
+      this.in = new BufferedInputStream(in, 1024 * 9);// >1 MB buffer
+    }
+
     int blockSize = 0X39;// i.e 9
     this.blockSize100k = blockSize - '0';
-    this.in = new BufferedInputStream(in, 1024 * 9);// >1 MB buffer
-    this.readMode = readMode;
-    this.skipDecompression = skipDecompression;
-    if (readMode == READ_MODE.CONTINUOUS) {
-      currentState = STATE.START_BLOCK_STATE;
-      lazyInitialization = (in.available() == 0)?true:false;
-      if(!lazyInitialization){
-    init();
-  }
-    } else if (readMode == READ_MODE.BYBLOCK) {
-      this.currentState = STATE.NO_PROCESS_STATE;
-      skipResult = this.skipToNextMarker(CBZip2InputStream.BLOCK_DELIMITER,DELIMITER_BIT_LENGTH);
-      this.reportedBytesReadFromCompressedStream = this.bytesReadFromCompressedStream;
-      if(!skipDecompression){
-        changeStateToProcessABlock();
-      }
+    currentState = STATE.START_BLOCK_STATE;
+    lazyInitialization = (in.available() == 0)?true:false;
+    if(!lazyInitialization){
+      init();
     }
   }
 
-  /**
-   * Returns the number of bytes between the current stream position
-   * and the immediate next BZip2 block marker.
-   *
-   * @param in
-   *             The InputStream
-   *
-   * @return long Number of bytes between current stream position and the
-   * next BZip2 block start marker.
- * @throws IOException
-   *
-   */
-  public static long numberOfBytesTillNextMarker(final InputStream in) throws IOException{
-    CBZip2InputStream anObject = new CBZip2InputStream(in, READ_MODE.BYBLOCK, true);
-    return anObject.getProcessedByteCount();
-  }
-
-  public CBZip2InputStream(final InputStream in) throws IOException {
-    this(in, READ_MODE.CONTINUOUS);
+  public CBZip2InputStream(InputStream is, boolean decompressConcatenated) throws IOException {
+    this(is);
+    // TODO: WRITE ME.
   }
 
   private void changeStateToProcessABlock() throws IOException {
@@ -395,20 +317,12 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
       this.lazyInitialization = false;
     }
 
-    if(skipDecompression){
-      changeStateToProcessABlock();
-      skipDecompression = false;
-    }
-
     final int hi = offs + len;
     int destOffs = offs;
     int b = 0;
 
-
-
     for (; ((destOffs < hi) && ((b = read0())) >= 0);) {
       dest[destOffs++] = (byte) b;
-
     }
 
     int result = destOffs - offs;
@@ -487,27 +401,6 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
   }
 
   private void initBlock() throws IOException {
-    if (this.readMode == READ_MODE.BYBLOCK) {
-      // this.checkBlockIntegrity();
-      this.storedBlockCRC = bsGetInt();
-      this.blockRandomised = bsR(1) == 1;
-
-      /**
-      * Allocate data here instead in constructor, so we do not allocate
-      * it if the input file is empty.
-      */
-      if (this.data == null) {
-        this.data = new Data(this.blockSize100k);
-      }
-
-      // currBlockNo++;
-      getAndMoveToFrontDecode();
-
-      this.crc.initialiseCRC();
-      this.currentState = STATE.START_BLOCK_STATE;
-      return;
-    }
-
     char magic0 = bsGetUByte();
     char magic1 = bsGetUByte();
     char magic2 = bsGetUByte();
@@ -1072,12 +965,8 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
       this.crc.updateCRC(su_ch2Shadow);
     } else {
       endBlock();
-      if (readMode == READ_MODE.CONTINUOUS) {
       initBlock();
       setupBlock();
-      } else if (readMode == READ_MODE.BYBLOCK) {
-        this.currentState = STATE.NO_PROCESS_STATE;
-      }
     }
   }
 
@@ -1094,12 +983,8 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
     } else {
       this.currentState = STATE.NO_RAND_PART_A_STATE;
       endBlock();
-      if (readMode == READ_MODE.CONTINUOUS) {
       initBlock();
       setupBlock();
-      } else if (readMode == READ_MODE.BYBLOCK) {
-        this.currentState = STATE.NO_PROCESS_STATE;
-      }
     }
   }
 
@@ -1234,5 +1119,25 @@ public class CBZip2InputStream extends InputStream implements BZip2Constants {
       return ttShadow;
     }
 
+  }
+
+  public static boolean matches(byte[] signature, int length) {
+    if (length < 3) {
+      return false;
+    }
+
+    if (signature[0] != 'B') {
+      return false;
+    }
+
+    if (signature[1] != 'Z') {
+      return false;
+    }
+
+    if (signature[2] != 'h') {
+      return false;
+    }
+
+    return true;
   }
 }

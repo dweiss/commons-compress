@@ -22,21 +22,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.cbzip2.BZip2Constants;
+import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
 import org.apache.commons.compress.compressors.deflate.DeflateCompressorInputStream;
 import org.apache.commons.compress.compressors.deflate.DeflateCompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
 import org.apache.commons.compress.compressors.lzma.LZMAUtils;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
-import org.apache.commons.compress.compressors.xz.XZUtils;
 import org.apache.commons.compress.compressors.pack200.Pack200CompressorInputStream;
 import org.apache.commons.compress.compressors.pack200.Pack200CompressorOutputStream;
 import org.apache.commons.compress.compressors.snappy.FramedSnappyCompressorInputStream;
 import org.apache.commons.compress.compressors.snappy.SnappyCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
+import org.apache.commons.compress.compressors.xz.XZUtils;
 import org.apache.commons.compress.compressors.z.ZCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
@@ -201,7 +202,7 @@ public class CompressorStreamFactory {
      * @throws IllegalArgumentException if the stream is null or does not support mark
      * @since 1.1
      */
-    public CompressorInputStream createCompressorInputStream(final InputStream in)
+    public InputStream createCompressorInputStream(final InputStream in)
             throws CompressorException {
         if (in == null) {
             throw new IllegalArgumentException("Stream must not be null.");
@@ -217,8 +218,8 @@ public class CompressorStreamFactory {
             int signatureLength = IOUtils.readFully(in, signature);
             in.reset();
 
-            if (BZip2CompressorInputStream.matches(signature, signatureLength)) {
-                return new BZip2CompressorInputStream(in, decompressConcatenated);
+            if (CBZip2InputStream.matches(signature, signatureLength)) {
+                return new CBZip2InputStream(in, decompressConcatenated);
             }
 
             if (GzipCompressorInputStream.matches(signature, signatureLength)) {
@@ -270,7 +271,7 @@ public class CompressorStreamFactory {
      * @throws CompressorException if the compressor name is not known
      * @throws IllegalArgumentException if the name or input stream is null
      */
-    public CompressorInputStream createCompressorInputStream(final String name,
+    public InputStream createCompressorInputStream(final String name,
             final InputStream in) throws CompressorException {
         if (name == null || in == null) {
             throw new IllegalArgumentException(
@@ -284,7 +285,7 @@ public class CompressorStreamFactory {
             }
 
             if (BZIP2.equalsIgnoreCase(name)) {
-                return new BZip2CompressorInputStream(in, decompressConcatenated);
+                return new CBZip2InputStream(in, decompressConcatenated);
             }
 
             if (XZ.equalsIgnoreCase(name)) {

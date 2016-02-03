@@ -18,7 +18,7 @@
  */
 package org.apache.commons.compress.compressors.bzip2;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+
+import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -104,7 +106,7 @@ public class PythonTruncatedBzip2Test {
 
     private static ReadableByteChannel makeBZ2C(InputStream source) throws IOException {
         BufferedInputStream bin = new BufferedInputStream(source);
-        BZip2CompressorInputStream bZin = new BZip2CompressorInputStream(bin, true);
+        CBZip2InputStream bZin = new CBZip2InputStream(bin, true);
 
         return Channels.newChannel(bZin);
     }

@@ -51,7 +51,7 @@ public final class LZMATestCase extends AbstractTestCase {
         final File output = new File(dir, "bla.tar");
         final InputStream is = new BufferedInputStream(new FileInputStream(input));
         try {
-            final CompressorInputStream in = new CompressorStreamFactory()
+            final InputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream(is);
             copy(in, output);
         } finally {

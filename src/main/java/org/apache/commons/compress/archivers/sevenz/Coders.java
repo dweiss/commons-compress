@@ -30,8 +30,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.cbzip2.CBZip2InputStream;
 import org.tukaani.xz.ARMOptions;
 import org.tukaani.xz.ARMThumbOptions;
 import org.tukaani.xz.FilterOptions;
@@ -173,8 +173,9 @@ class Coders {
         InputStream decode(final String archiveName, final InputStream in, long uncompressedLength,
                 final Coder coder, final byte[] password)
                 throws IOException {
-          // TODO: replace decoding here.
-            return new BZip2CompressorInputStream(in);
+
+          // Consume magic.
+          return new CBZip2InputStream(in);
         }
         @Override
         OutputStream encode(final OutputStream out, final Object options)

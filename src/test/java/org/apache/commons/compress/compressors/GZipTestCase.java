@@ -65,7 +65,7 @@ public final class GZipTestCase extends AbstractTestCase {
         final File output = new File(dir, "bla.tar");
         final InputStream is = new FileInputStream(input);
         try {
-            final CompressorInputStream in = new CompressorStreamFactory()
+            final InputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("gz", is);
             FileOutputStream out = null;
             try {
@@ -87,7 +87,7 @@ public final class GZipTestCase extends AbstractTestCase {
         final File input = getFile("multiple.gz");
         final InputStream is = new FileInputStream(input);
         try {
-            final CompressorInputStream in = new CompressorStreamFactory()
+            final InputStream in = new CompressorStreamFactory()
                 .createCompressorInputStream("gz", is);
             try {
                 assertEquals('a', in.read());
@@ -127,7 +127,7 @@ public final class GZipTestCase extends AbstractTestCase {
     public void testCorruptedInput() throws Exception {
         InputStream in = null;
         OutputStream out = null;
-        CompressorInputStream cin = null;
+        InputStream cin = null;
         try {
             in = new FileInputStream(getFile("bla.tgz"));
             out = new ByteArrayOutputStream();
@@ -137,8 +137,7 @@ public final class GZipTestCase extends AbstractTestCase {
 
             byte[] data = ((ByteArrayOutputStream) out).toByteArray();
             in = new ByteArrayInputStream(data, 0, data.length - 1);
-            cin = new CompressorStreamFactory()
-                .createCompressorInputStream("gz", in);
+            cin = new CompressorStreamFactory().createCompressorInputStream("gz", in);
             out = new ByteArrayOutputStream();
 
             try {
